@@ -279,7 +279,7 @@
         function generateNewMaze() {
             console.log("generateNewMaze");
             initializeMaze();
-            maze[rows-1][cols-1].steps = 0;
+            maze[rows-1][cols-1].steps = 1;
             generateMaze(maze[rows-1][cols-1]); // Start generation from (0,0) with steps 0
             generated = true;
             maze[0][0].walls[3] = false;
@@ -322,6 +322,22 @@
                 }
             }
         }
+
+        xSizeInput.addEventListener('change', () => {
+            resetMaze();
+        });
+
+        ySizeInput.addEventListener('change', () => {
+            resetMaze();
+        });
+        
+        wallThicknessInput.addEventListener('change', () => {
+            resetMaze();
+        });
+
+        floorColorInput.addEventListener('change', () => {
+            resetMaze();
+        });
 
         resetButton.addEventListener('click', () => {
             resetMaze();
