@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maze Generator v0.2</title>
+    <title>Maze Generator</title>
     <style>
         body {
             display: flex;
@@ -367,6 +367,7 @@
         }
 
         wallThicknessInput.addEventListener('change', () => {
+            wallThickness = parseInt(wallThicknessInput.value);
             drawMaze();
         });
 
