@@ -48,11 +48,12 @@
         <label>
             <input type="checkbox" id="showPath" checked> Show Path
         </label>
+        <button id="resetButton">Reset</button>
         <button id="generateButton">Generate</button>
     </div>
     <script>
         // kept as a single file because the intended user might want to run this on their home browser
-        
+
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -60,6 +61,7 @@
         const ySizeInput = document.getElementById('ySize');
         const wallThicknessInput = document.getElementById('wallThickness');
         const floorColorInput = document.getElementById('floorColor');
+        const resetButton = document.getElementById('resetButton');
         const generateButton = document.getElementById('generateButton');
         const showStepsCheckbox = document.getElementById('showSteps');
         const showPathCheckbox = document.getElementById('showPath');
@@ -321,19 +323,7 @@
             }
         }
 
-        xSizeInput.addEventListener('change', () => {
-            resetMaze();
-        });
-
-        ySizeInput.addEventListener('change', () => {
-            resetMaze();
-        });
-        
-        wallThicknessInput.addEventListener('change', () => {
-            resetMaze();
-        });
-
-        floorColorInput.addEventListener('change', () => {
+        resetButton.addEventListener('click', () => {
             resetMaze();
         });
 
