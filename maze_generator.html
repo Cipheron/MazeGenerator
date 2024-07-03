@@ -322,7 +322,19 @@
                 }
             }
         }
-
+        
+        xSizeInput.addEventListener('click', () => {
+            resetMaze();
+        });
+        
+        ySizeInput.addEventListener('click', () => {
+            resetMaze();
+        });
+        
+        wallThicknessInput.addEventListener('click', () => {
+            resetMaze();
+        });
+        
         resetButton.addEventListener('click', () => {
             resetMaze();
         });
