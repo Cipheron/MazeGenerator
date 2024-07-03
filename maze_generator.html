@@ -40,6 +40,12 @@
         <input type="number" id="ySize" value="8" min="2" max="100">
         <label for="wallThickness">Wall Thickness:</label>
         <input type="number" id="wallThickness" value="8" min="1" max="20">
+        <label for="minBranches">Min Branches:</label>
+        <input type="number" id="minBranches" value="4" min="0" max="20">
+
+        <label for="maxPath">Max Path:</label>
+        <input type="number" id="maxPath" value="28" min="0" max="9999">
+
         <label for="floorColor">Floor Color:</label>
         <input type="color" id="floorColor" value="#ddffdd">
         <label>
@@ -48,7 +54,6 @@
         <label>
             <input type="checkbox" id="showPath" checked> Show Path
         </label>
-        <button id="resetButton">Reset</button>
         <button id="generateButton">Generate</button>
     </div>
     <script>
@@ -60,8 +65,9 @@
         const xSizeInput = document.getElementById('xSize');
         const ySizeInput = document.getElementById('ySize');
         const wallThicknessInput = document.getElementById('wallThickness');
+        const minBranchesInput = document.getElementById('minBranches');
+        const maxPathInput = document.getElementById('maxPath');
         const floorColorInput = document.getElementById('floorColor');
-        const resetButton = document.getElementById('resetButton');
         const generateButton = document.getElementById('generateButton');
         const showStepsCheckbox = document.getElementById('showSteps');
         const showPathCheckbox = document.getElementById('showPath');
@@ -73,6 +79,7 @@
         let cellOffsetX = 0;
         let cellOffsetY = 0;
         let floorColor = 0;
+        let minBranches = 0;
         let generated = false;
         let showSteps = showStepsCheckbox.checked;
         let showPath = showPathCheckbox.checked;
@@ -105,6 +112,8 @@
                 }
                 maze.push(row);
             }
+
+            console.log("initializeMaze - done")
         }
 
         function index(x, y) {
@@ -136,37 +145,44 @@
         }
 
         function generateMaze(current) {
-            current.visited = true;
+            while(current != null)
+            {
+                current.visited = true;
 
-            const neighbors = [];
+                const neighbors = [];
 
-            // Check each direction
-            for (const dir of directions) {
-                const nextX = current.x + dir.x;
-                const nextY = current.y + dir.y;
+                // Check each direction
+                for (const dir of directions) {
+                    const nextX = current.x + dir.x;
+                    const nextY = current.y + dir.y;
 
-                // Check if the neighbor is within bounds and not visited
-                if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows) {
-                    const neighbor = maze[nextY][nextX];
-                    if (!neighbor.visited) {
-                        neighbors.push(neighbor);
+                    // Check if the neighbor is within bounds and not visited
+                    if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows) {
+                        const neighbor = maze[nextY][nextX];
+                        if (!neighbor.visited) {
+                            neighbors.push(neighbor);
+                        }
                     }
                 }
-            }
 
-            if (neighbors.length > 0) {
-                const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                stack.push(current);
-                removeWalls(current, next);
-                next.steps = current.steps + 1;
-                generateMaze(next);
-            } else if (stack.length > 0) {
-                generateMaze(stack.pop());
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    stack.push(current);
+                    removeWalls(current, next);
+                    next.steps = current.steps + 1;
+                    current = next;
+                } else if (stack.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * stack.length);
+                    const randomElement = stack.splice(randomIndex, 1)[0];
+                    current = randomElement;
+                } else {
+                    current = null;
+                }
             }
         }
 
         function drawMaze() {
-            console.log("drawMaze");
+            //console.log("drawMaze");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             if(generated == false) {
@@ -265,6 +281,8 @@
             rows = parseInt(ySizeInput.value);
             cols = parseInt(xSizeInput.value);
             wallThickness = parseInt(wallThicknessInput.value);
+            minBranches =  parseInt(minBranchesInput.value);
+            maxPath = parseInt(maxPathInput.value);
             cellSize = (canvas.width - wallThickness) / Math.max(rows + 2, cols + 2);
             cellOffsetX = wallThickness / 2 + cellSize;
             cellOffsetY = wallThickness / 2 + cellSize;
@@ -276,19 +294,40 @@
             //drawMaze();
         }
 
+        let branch_count = 0;
+        let maxAttempts = 10;
+
         function generateNewMaze() {
-            console.log("generateNewMaze");
-            initializeMaze();
-            maze[rows-1][cols-1].steps = 1;
-            generateMaze(maze[rows-1][cols-1]); // Start generation from (0,0) with steps 0
-            generated = true;
-            maze[0][0].walls[3] = false;
-            maze[rows-1][cols-1].walls[1] = false;
-            markPath()
+            //console.log("generateNewMaze");
+            resetMaze();
+            attempts = 0;
+            branch_count = -1;
+            // check if maxPath is reasonable.
+            let minPath = rows + cols;
+            let maxPathLength = maxPath;
+            if(maxPathLength < minPath) {
+                maxPathLength = rows * cols;
+            }
+            //alert("minPath = " + minPath)
+            //alert("maxPathLength = " + maxPathLength)
+            while(attempts < maxAttempts && (branch_count < minBranches || maze[0][0].steps > maxPathLength)) { 
+                attempts++;
+                console.log("generation attempt " + attempts)
+                initializeMaze();
+                maze[rows-1][cols-1].steps = 1;
+                generateMaze(maze[rows-1][cols-1]); // Start generation from (0,0) with steps 0
+                generated = true;
+                maze[0][0].walls[3] = false;
+                maze[rows-1][cols-1].walls[1] = false;
+                markPath()
+                //alert(branch_count)
+            }
+            //alert(attempts)
             drawMaze();
         }
 
         function markPath() {
+            branch_count = 1;
             let current = maze[0][0]; // [rows - 1][cols - 1]; // Start from bottom-right corner
             current.onPath = true;
 
@@ -296,6 +335,7 @@
                 let next = null;
                 let minSteps = Infinity;
                 let minDir = -1;
+                branch_count-=2;
 
                 // Check each direction
                 for (let i = 0; i < directions.length; i++) {
@@ -305,11 +345,14 @@
 
                     // Check if the neighbor is within bounds
                     if (nextX >= 0 && nextX < cols && nextY >= 0 && nextY < rows) {
-                        const neighbor = maze[nextY][nextX];
-                        if (neighbor.steps < minSteps && !current.walls[i]) {
-                            minSteps = neighbor.steps;
-                            next = neighbor;
-                            minDir = i;
+                        if (!current.walls[i]) {
+                            branch_count++;
+                            const neighbor = maze[nextY][nextX];
+                            if (neighbor.steps < minSteps) {
+                                minSteps = neighbor.steps;
+                                next = neighbor;
+                                minDir = i;
+                            }
                         }
                     }
                 }
@@ -322,23 +365,7 @@
                 }
             }
         }
-        
-        xSizeInput.addEventListener('click', () => {
-            resetMaze();
-        });
-        
-        ySizeInput.addEventListener('click', () => {
-            resetMaze();
-        });
-        
-        wallThicknessInput.addEventListener('click', () => {
-            resetMaze();
-        });
-        
-        resetButton.addEventListener('click', () => {
-            resetMaze();
-        });
-
+                
         generateButton.addEventListener('click', () => {
             generateNewMaze();
         });
