@@ -365,7 +365,11 @@
                 }
             }
         }
-                
+
+        wallThicknessInput.addEventListener('change', () => {
+            drawMaze();
+        });
+
         generateButton.addEventListener('click', () => {
             generateNewMaze();
         });
